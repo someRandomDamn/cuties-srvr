@@ -1,0 +1,54 @@
+version: '3.3'
+
+services:
+
+  cuttiesdb:
+    #restart: always
+    image: mariadb:10.3
+    ports:
+      - 3036:3306
+    #expose:
+    # - 3036
+    environment:
+      MYSQL_ROOT_PASSWORD: qwerty
+      MYSQL_PASSWORD: qwerty
+      MYSQL_USER: cutty_user
+      MYSQL_DATABASE: blockchain
+    networks:
+      - local-networks
+    volumes:
+      - dbd:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  cuttydev:
+    container_name: cutties_app
+    image: cutty-api-dev:1.0.0
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 3007:3007
+      - 9229:9229
+    environment:
+      PORT: 3000
+      DB_HOST: cuttiesdb
+      DB_USER: cutty_user
+      DB_PASSWORD: qwerty
+      DB_NAME: blockchain
+      DB_PORT: 3306
+    volumes:
+      - .:/usr/src/app
+    working_dir: /usr/src/app
+    #restart: unless-stopped
+    depends_on:
+      - cuttiesdb
+    networks:
+      - local-networks
+    command: npm run start:debug
+
+networks:
+  local-networks:
+    driver: bridge
+
+volumes:
+  dbd:
